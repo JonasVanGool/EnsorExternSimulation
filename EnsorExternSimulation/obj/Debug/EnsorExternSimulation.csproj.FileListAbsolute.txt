@@ -1,0 +1,9 @@
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternSimulation.exe.config
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternSimulation.exe
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternSimulation.pdb
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.csprojResolveAssemblyReference.cache
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.Form1.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.Properties.Resources.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.csproj.GenerateResource.Cache
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.exe
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.pdb
