@@ -10,21 +10,25 @@ namespace EnsorExternSimulation
     class EnsorIOSocketAdaptor
     {
         private EnsorIOController ensorIOController;
-        private SocketServer socketServer;
+        private SocketClient socketServer;
         private Thread waitForReceive;
         private Thread pollData;
         private ExternSimulationPackage receivePackage;
         private ExternSimulationPackage sendPackage;
         private int pollFreq;
         private int checkReceiveFreq;
+        private bool allowReceive;
+        private bool allowPoll;
 
-        public EnsorIOSocketAdaptor(EnsorIOController ioController, SocketServer server)
+        public EnsorIOSocketAdaptor(EnsorIOController ioController, SocketClient server)
         {
             ensorIOController = ioController;
             socketServer = server;
             waitForReceive = new Thread(new ThreadStart(this.WaitForReceive));
+            allowReceive= true;
             waitForReceive.Start();
             pollData = new Thread(new ThreadStart(this.PollData));
+            allowPoll = true;
             pollData.Start();
             pollFreq = 1; //Hz
             checkReceiveFreq = 10; //Hz
@@ -32,7 +36,9 @@ namespace EnsorExternSimulation
 
         public void StopService()
         {
+            allowPoll = false;
             pollData.Abort();
+            allowReceive = false;
             waitForReceive.Abort();
         }
         
@@ -76,7 +82,7 @@ namespace EnsorExternSimulation
 
         private void PollData()
         {
-            while (true)
+            while (allowPoll)
             {
                 Byte[] tempArray = new Byte[1];
                 tempArray[0] = 0x70; //'p'
@@ -86,7 +92,7 @@ namespace EnsorExternSimulation
         }
 
         private void WaitForReceive(){
-            while (true)
+            while (allowReceive)
             {
                 Thread.Sleep((int)((double)1 / (double)checkReceiveFreq * 1000));    
                 if (socketServer.DataAvailable())

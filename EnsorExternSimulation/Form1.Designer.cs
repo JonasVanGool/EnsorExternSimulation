@@ -33,9 +33,14 @@
             this.tbxServerPort = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.lstbDigOutputs = new System.Windows.Forms.ListBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtbDigOutputsFilter = new System.Windows.Forms.TextBox();
+            this.lstbDigInputs = new System.Windows.Forms.ListBox();
+            this.txtbDigInputsFilter = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.pnlNumOutputs = new System.Windows.Forms.Panel();
+            this.pnlNumInputs = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // btnStartServer
@@ -44,7 +49,7 @@
             this.btnStartServer.Name = "btnStartServer";
             this.btnStartServer.Size = new System.Drawing.Size(93, 20);
             this.btnStartServer.TabIndex = 0;
-            this.btnStartServer.Text = "Start Server";
+            this.btnStartServer.Text = "Connect Server";
             this.btnStartServer.UseVisualStyleBackColor = true;
             this.btnStartServer.Click += new System.EventHandler(this.btnStartServer_Click);
             // 
@@ -82,41 +87,93 @@
             this.label2.TabIndex = 4;
             this.label2.Text = "Port:";
             // 
-            // textBox1
+            // lstbDigOutputs
             // 
-            this.textBox1.Location = new System.Drawing.Point(12, 52);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(143, 20);
-            this.textBox1.TabIndex = 5;
+            this.lstbDigOutputs.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.lstbDigOutputs.FormattingEnabled = true;
+            this.lstbDigOutputs.Items.AddRange(new object[] {
+            "Output 1"});
+            this.lstbDigOutputs.Location = new System.Drawing.Point(12, 100);
+            this.lstbDigOutputs.Name = "lstbDigOutputs";
+            this.lstbDigOutputs.Size = new System.Drawing.Size(291, 290);
+            this.lstbDigOutputs.TabIndex = 5;
+            this.lstbDigOutputs.Tag = "";
             // 
-            // checkBox1
+            // label3
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(162, 54);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(80, 17);
-            this.checkBox1.TabIndex = 6;
-            this.checkBox1.Text = "checkBox1";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 53);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(44, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Outputs";
             // 
-            // button1
+            // txtbDigOutputsFilter
             // 
-            this.button1.Location = new System.Drawing.Point(248, 49);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 7;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.txtbDigOutputsFilter.Location = new System.Drawing.Point(12, 74);
+            this.txtbDigOutputsFilter.Name = "txtbDigOutputsFilter";
+            this.txtbDigOutputsFilter.Size = new System.Drawing.Size(137, 20);
+            this.txtbDigOutputsFilter.TabIndex = 7;
+            // 
+            // lstbDigInputs
+            // 
+            this.lstbDigInputs.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.lstbDigInputs.FormattingEnabled = true;
+            this.lstbDigInputs.Items.AddRange(new object[] {
+            "Output 1"});
+            this.lstbDigInputs.Location = new System.Drawing.Point(325, 100);
+            this.lstbDigInputs.Name = "lstbDigInputs";
+            this.lstbDigInputs.Size = new System.Drawing.Size(288, 290);
+            this.lstbDigInputs.TabIndex = 8;
+            this.lstbDigInputs.Tag = "";
+            // 
+            // txtbDigInputsFilter
+            // 
+            this.txtbDigInputsFilter.Location = new System.Drawing.Point(325, 74);
+            this.txtbDigInputsFilter.Name = "txtbDigInputsFilter";
+            this.txtbDigInputsFilter.Size = new System.Drawing.Size(137, 20);
+            this.txtbDigInputsFilter.TabIndex = 9;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(322, 53);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(36, 13);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "Inputs";
+            // 
+            // pnlNumOutputs
+            // 
+            this.pnlNumOutputs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.pnlNumOutputs.AutoScroll = true;
+            this.pnlNumOutputs.Location = new System.Drawing.Point(15, 409);
+            this.pnlNumOutputs.Name = "pnlNumOutputs";
+            this.pnlNumOutputs.Size = new System.Drawing.Size(288, 277);
+            this.pnlNumOutputs.TabIndex = 11;
+            // 
+            // pnlNumInputs
+            // 
+            this.pnlNumInputs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.pnlNumInputs.AutoScroll = true;
+            this.pnlNumInputs.Location = new System.Drawing.Point(325, 409);
+            this.pnlNumInputs.Name = "pnlNumInputs";
+            this.pnlNumInputs.Size = new System.Drawing.Size(288, 277);
+            this.pnlNumInputs.TabIndex = 12;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(645, 170);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.checkBox1);
-            this.Controls.Add(this.textBox1);
+            this.ClientSize = new System.Drawing.Size(625, 698);
+            this.Controls.Add(this.pnlNumInputs);
+            this.Controls.Add(this.pnlNumOutputs);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.txtbDigInputsFilter);
+            this.Controls.Add(this.lstbDigInputs);
+            this.Controls.Add(this.txtbDigOutputsFilter);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.lstbDigOutputs);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbxServerPort);
@@ -136,9 +193,14 @@
         private System.Windows.Forms.TextBox tbxServerPort;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.ListBox lstbDigOutputs;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox txtbDigOutputsFilter;
+        private System.Windows.Forms.ListBox lstbDigInputs;
+        private System.Windows.Forms.TextBox txtbDigInputsFilter;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Panel pnlNumOutputs;
+        private System.Windows.Forms.Panel pnlNumInputs;
     }
 }
 

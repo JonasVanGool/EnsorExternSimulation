@@ -203,7 +203,7 @@ namespace EnsorExternSimulation
                 }              
         }
 
-        public void SetNumOuputByGUI(String Symbol, double value)
+        public void SetNumOutputByGUI(String Symbol, double value)
         {
             GUI_BusyWriting = true;
             foreach (NumOutput numOutput in numOutputs)
@@ -252,6 +252,11 @@ namespace EnsorExternSimulation
         public int IONr;
         public int Logic;
         public String Options;
+
+        public override string ToString()
+        {
+            return Symbol;
+        }
     }
 
     class DigInput
@@ -264,6 +269,11 @@ namespace EnsorExternSimulation
         public int IONr;
         public int Logic;
         public String Options;
+
+        public override string ToString()
+        {
+            return Symbol;
+        }
     }
 
     class NumInput
@@ -280,6 +290,11 @@ namespace EnsorExternSimulation
         public double MaxVal;
         public String UnitID;
         public String Options;
+
+        public override string ToString()
+        {
+            return Symbol;
+        }
     }
 
     class NumOutput
@@ -297,5 +312,10 @@ namespace EnsorExternSimulation
         public double DefVal;
         public String UnitID;
         public String Options;
+
+        public override string ToString()
+        {
+            return Symbol;
+        }
     }
 }
