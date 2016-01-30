@@ -11,9 +11,9 @@ using System.Threading;
 
 namespace EnsorExternSimulation
 {
-    public partial class Form1 : Form
+    public partial class EnsorExternSimulation : Form
     {
-        SocketClient socketServer;
+        SocketClient socketClient;
         EnsorIOController ensorIOController;
         EnsorIOSocketAdaptor ensorIOSockeAdaptor;
         Thread updateGUI;
@@ -26,13 +26,14 @@ namespace EnsorExternSimulation
         Brush brushText = Brushes.Black;
 
         const int yOffsetGrouboxes = 80;
-        const int trackBarRescaler = 100;
+        const int trackBarRescaler = 10;
         private LinkedList<GroupBox> grpbNumOutputs;
         private LinkedList<GroupBox> grpbNumInputs;
+        private bool connected = false;
 
         delegate void UpdateGraphicsCallback();
 
-        public Form1()
+        public EnsorExternSimulation()
         {
             InitializeComponent();
             this.FormClosing += Form1_Closing;
@@ -50,18 +51,13 @@ namespace EnsorExternSimulation
             grpbNumOutputs = new LinkedList<GroupBox>();
             grpbNumInputs = new LinkedList<GroupBox>();
 
-            socketServer = new SocketClient(tbxServerIp.Text,int.Parse(tbxServerPort.Text));
             guiUpdateFreq = 5; //Hz
         }
 
         private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (socketServer.GetServerActive())
-            {
-                ensorIOSockeAdaptor.StopService();
-                socketServer.StopServer();
-
-            }
+            ensorIOSockeAdaptor.StopService();
+            socketClient.CloseConnection();
             allowUpdateGUI = false;
             if (updateGUI != null)
             updateGUI.Abort();
@@ -69,140 +65,64 @@ namespace EnsorExternSimulation
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
-            if (!socketServer.GetServerActive()){
-                ensorIOController = new EnsorIOController(@"C:\Team Systems\Ensor - Projects\Standard_FLV-JonasTestProject\EnsConf\Bld\Ensor_Standard_FLV.EnsConfLst");
-                
-                lstbDigOutputs.Items.Clear();
-                foreach(DigOutput digOutput in ensorIOController.digOutputs)
-                    lstbDigOutputs.Items.Add(digOutput.Symbol);
+            if(ensorIOController==null){
+                return;
+            }
 
-                lstbDigInputs.Items.Clear();
-                foreach (DigInput digInput in ensorIOController.digInputs)
-                    lstbDigInputs.Items.Add(digInput.Symbol);
-
-                // clear all group boxes num outputs
-                foreach (GroupBox groupBox in grpbNumOutputs)
-                    groupBox.Controls.Clear();
-                int counter = 0;
-                foreach (NumOutput numOutput in ensorIOController.numOutputs)
-                {   
-                    // create groupbox
-                    GroupBox tempGroupbox = new GroupBox();
-                    tempGroupbox.Location = new System.Drawing.Point(9, 4 + counter * yOffsetGrouboxes);
-                    tempGroupbox.Name = numOutput.Symbol;
-                    tempGroupbox.Text = numOutput.Symbol;
-                    tempGroupbox.Size = new System.Drawing.Size(258, 69);
-                    tempGroupbox.TabIndex = 2;
-                    tempGroupbox.TabStop = false;
-                    grpbNumOutputs.AddLast(tempGroupbox);
-
-
-                    // create textbox
-                    TextBox tempTextbox = new TextBox();
-                    tempTextbox.Location = new System.Drawing.Point(7, 20);
-                    tempTextbox.Name = numOutput.Symbol; ;
-                    tempTextbox.Size = new System.Drawing.Size(56, 20);
-                    tempTextbox.TabIndex = 1;
-                    tempTextbox.Text = numOutput.DefVal.ToString("0.###");
-                    tempTextbox.TextChanged += tempTextboxOutputs_TextChanged;
-                    // create slider
-                    TrackBar tempTrackbar = new TrackBar();
-                    tempTrackbar.Location = new System.Drawing.Point(69, 19);
-                    tempTrackbar.Name = numOutput.Symbol;
-                    tempTrackbar.Size = new System.Drawing.Size(183, 45);
-                    tempTrackbar.TabIndex = 0;
-                    tempTrackbar.Minimum = Math.Min((int)(numOutput.MaxVal * trackBarRescaler), (int)(numOutput.MinVal * trackBarRescaler));
-                    tempTrackbar.Maximum = Math.Max( (int)(numOutput.MaxVal * trackBarRescaler),(int)(numOutput.MinVal * trackBarRescaler));
-                    tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum)  / 100;
-                    tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum)/ 10;
-                    tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    tempTrackbar.MouseUp += tempTrackbarOutputs_MouseUp;
-                    grpbNumOutputs.Last().Controls.Add(tempTextbox);
-                    grpbNumOutputs.Last().Controls.Add(tempTrackbar);
-
-                    counter++;
-                }
-                foreach (GroupBox groupBox in grpbNumOutputs)
-                    pnlNumOutputs.Controls.Add(groupBox);
-
-                // clear all group boxes num outputs
-                foreach (GroupBox groupBox in grpbNumInputs)
-                    groupBox.Controls.Clear();
-                counter = 0;
-                foreach (NumInput numInput in ensorIOController.numInputs)
-                {
-                    // create groupbox
-                    GroupBox tempGroupbox = new GroupBox();
-                    tempGroupbox.Location = new System.Drawing.Point(9, 4 + counter * yOffsetGrouboxes);
-                    tempGroupbox.Name = numInput.Symbol;
-                    tempGroupbox.Text = numInput.Symbol;
-                    tempGroupbox.Size = new System.Drawing.Size(258, 69);
-                    tempGroupbox.TabIndex = 2;
-                    tempGroupbox.TabStop = false;
-                    grpbNumInputs.AddLast(tempGroupbox);
-
-                    // create textbox
-                    TextBox tempTextbox = new TextBox();
-                    tempTextbox.Location = new System.Drawing.Point(7, 20);
-                    tempTextbox.Name = numInput.Symbol; ;
-                    tempTextbox.Size = new System.Drawing.Size(56, 20);
-                    tempTextbox.TabIndex = 1;
-                    tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
-                    tempTextbox.TextChanged += tempTextboxInputs_TextChanged;
-                    // create slider
-                    TrackBar tempTrackbar = new TrackBar();
-                    tempTrackbar.Location = new System.Drawing.Point(69, 19);
-                    tempTrackbar.Name = numInput.Symbol;
-                    tempTrackbar.Size = new System.Drawing.Size(183, 45);
-                    tempTrackbar.TabIndex = 0;
-                    tempTrackbar.Minimum = Math.Min((int)(numInput.MaxVal * trackBarRescaler), (int)(numInput.MinVal * trackBarRescaler));
-                    tempTrackbar.Maximum = Math.Max((int)(numInput.MaxVal * trackBarRescaler), (int)(numInput.MinVal * trackBarRescaler)); ;
-                    tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum)/ 100;
-                    tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    tempTrackbar.MouseUp += tempTrackbarInputs_MouseUp;
-                    grpbNumInputs.Last().Controls.Add(tempTextbox);
-                    grpbNumInputs.Last().Controls.Add(tempTrackbar);
-
-                    counter++;
-                }
-                foreach (GroupBox groupBox in grpbNumInputs)
-                    pnlNumInputs.Controls.Add(groupBox);
-
-                socketServer.StartServer();
-                ensorIOSockeAdaptor = new EnsorIOSocketAdaptor(ensorIOController, socketServer);
+            if (!connected)
+            {   
+                socketClient = new SocketClient(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
+                socketClient.Connect();
+                ensorIOSockeAdaptor = new EnsorIOSocketAdaptor(ensorIOController, socketClient);
                 allowUpdateGUI = true;
                 updateGUI = new Thread(new ThreadStart(this.UpdateGui));
-
                 updateGUI.Start();
+                connected = !connected;
+                return;
             }
+            if (connected)
+            {
+                ensorIOSockeAdaptor.StopService();
+                socketClient.CloseConnection();
+                connected = !connected;
+                return;
+            }
+
         }
 
         void tempTrackbarOutputs_MouseUp(object sender, MouseEventArgs e)
-        {                     
+        {
+            if (ensorIOSockeAdaptor == null)
+                return;
             TrackBar parent = (TrackBar)sender;
-            ensorIOController.SetNumOutputByGUI(parent.Name, parent.Value / trackBarRescaler);
+            ensorIOController.SetNumOutputByGUI(parent.Name, (double)parent.Value / trackBarRescaler);
             ensorIOSockeAdaptor.SendIOUpdate();
         }
 
         void tempTextboxOutputs_TextChanged(object sender, EventArgs e)
         {
+            if (ensorIOSockeAdaptor == null)
+                return;
             TextBox parent = (TextBox)sender;
-            ensorIOController.SetNumOutputByGUI(parent.Name, double.Parse(parent.Text));     
+            ensorIOController.SetNumOutputByGUI(parent.Name, parent.Text.Equals("") || parent.Text.Equals("-") ? 0 : double.Parse(parent.Text));     
             ensorIOSockeAdaptor.SendIOUpdate();
         }
 
         void tempTrackbarInputs_MouseUp(object sender, MouseEventArgs e)
         {
+            if (ensorIOSockeAdaptor == null)
+                return;
             TrackBar parent = (TrackBar)sender;
-            ensorIOController.SetNumInputByGUI(parent.Name, parent.Value / trackBarRescaler);
+            ensorIOController.SetNumInputByGUI(parent.Name, (double)parent.Value / trackBarRescaler);
             ensorIOSockeAdaptor.SendIOUpdate();
         }
 
         void tempTextboxInputs_TextChanged(object sender, EventArgs e)
         {
+            if (ensorIOSockeAdaptor == null)
+                return;
             TextBox parent = (TextBox)sender;
-            ensorIOController.SetNumInputByGUI(parent.Name, double.Parse(parent.Text));
+            ensorIOController.SetNumInputByGUI(parent.Name, parent.Text.Equals("") || parent.Text.Equals("-") ? 0 : double.Parse(parent.Text));
             ensorIOSockeAdaptor.SendIOUpdate();
         }
 
@@ -213,11 +133,7 @@ namespace EnsorExternSimulation
             {
                 Thread.Sleep((int)((double)1 / (double)guiUpdateFreq * 1000));
                 // Update gui
-                if (ensorIOController.GetSocketUpdate())
-                {
-                    updateGraphics();
-                    ensorIOController.ResetSocketUpdate();
-                }
+                updateGraphics();         
             }
         }
 
@@ -230,10 +146,15 @@ namespace EnsorExternSimulation
             }
             else
             {
-                lstbDigOutputs.Refresh();
-                lstbDigInputs.Refresh();
-                updateNumOutputs();
-                updateNumInputs();
+                if (ensorIOController.GetSocketUpdate())
+                {
+                    lstbDigOutputs.Refresh();
+                    lstbDigInputs.Refresh();
+                    updateNumOutputs();
+                    updateNumInputs();
+                    ensorIOController.ResetSocketUpdate();
+                 }
+                btnStartServer.BackColor = !socketClient.GetConnected()? Color.Red : Color.Green;
             }
             
         }
@@ -424,9 +345,137 @@ namespace EnsorExternSimulation
             }
         }
 
-        private void trackBar1_Scroll(object sender, EventArgs e)
+        private void btnBrowse_Click(object sender, EventArgs e)
+        {                      
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+            openFileDialog1.Filter = "E'nsor Config files (*.EnsConfLst)|*.EnsConfLst";
+            openFileDialog1.DefaultExt = "EnsConfLst"; 
+            openFileDialog1.FilterIndex = 2;
+            openFileDialog1.RestoreDirectory = true;
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                ensorIOController = new EnsorIOController(openFileDialog1.FileName);
+                lstbDigOutputs.Items.Clear();
+                foreach (DigOutput digOutput in ensorIOController.digOutputs)
+                    lstbDigOutputs.Items.Add(digOutput.Symbol);
+
+                lstbDigInputs.Items.Clear();
+                foreach (DigInput digInput in ensorIOController.digInputs)
+                    lstbDigInputs.Items.Add(digInput.Symbol);
+
+                // clear all group boxes num outputs
+                foreach (GroupBox groupBox in grpbNumOutputs)
+                    groupBox.Controls.Clear();
+                int counter = 0;
+                foreach (NumOutput numOutput in ensorIOController.numOutputs)
+                {
+                    // create groupbox
+                    GroupBox tempGroupbox = new GroupBox();
+                    tempGroupbox.Location = new System.Drawing.Point(9, 4 + counter * yOffsetGrouboxes);
+                    tempGroupbox.Name = numOutput.Symbol;
+                    tempGroupbox.Text = numOutput.Symbol;
+                    tempGroupbox.Size = new System.Drawing.Size(258, 69);
+                    tempGroupbox.TabIndex = 2;
+                    tempGroupbox.TabStop = false;
+                    grpbNumOutputs.AddLast(tempGroupbox);
+
+
+                    // create textbox
+                    TextBox tempTextbox = new TextBox();
+                    tempTextbox.Location = new System.Drawing.Point(7, 20);
+                    tempTextbox.Name = numOutput.Symbol; ;
+                    tempTextbox.Size = new System.Drawing.Size(56, 20);
+                    tempTextbox.TabIndex = 1;
+                    tempTextbox.Text = numOutput.DefVal.ToString("0.###");
+                    tempTextbox.TextChanged += tempTextboxOutputs_TextChanged;
+                    tempTextbox.KeyPress += tempTextbox_KeyPress;
+                    // create slider
+                    TrackBar tempTrackbar = new TrackBar();
+                    tempTrackbar.Location = new System.Drawing.Point(69, 19);
+                    tempTrackbar.Name = numOutput.Symbol;
+                    tempTrackbar.Size = new System.Drawing.Size(183, 45);
+                    tempTrackbar.TabIndex = 0;
+                    tempTrackbar.Minimum = Math.Min((int)(numOutput.MaxVal * trackBarRescaler), (int)(numOutput.MinVal * trackBarRescaler));
+                    tempTrackbar.Maximum = Math.Max((int)(numOutput.MaxVal * trackBarRescaler), (int)(numOutput.MinVal * trackBarRescaler));
+                    tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
+                    tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
+                    tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
+                    tempTrackbar.MouseUp += tempTrackbarOutputs_MouseUp;
+                    grpbNumOutputs.Last().Controls.Add(tempTextbox);
+                    grpbNumOutputs.Last().Controls.Add(tempTrackbar);
+
+                    counter++;
+                }
+                foreach (GroupBox groupBox in grpbNumOutputs)
+                    pnlNumOutputs.Controls.Add(groupBox);
+
+                // clear all group boxes num outputs
+                foreach (GroupBox groupBox in grpbNumInputs)
+                    groupBox.Controls.Clear();
+                counter = 0;
+                foreach (NumInput numInput in ensorIOController.numInputs)
+                {
+                    // create groupbox
+                    GroupBox tempGroupbox = new GroupBox();
+                    tempGroupbox.Location = new System.Drawing.Point(9, 4 + counter * yOffsetGrouboxes);
+                    tempGroupbox.Name = numInput.Symbol;
+                    tempGroupbox.Text = numInput.Symbol;
+                    tempGroupbox.Size = new System.Drawing.Size(258, 69);
+                    tempGroupbox.TabIndex = 2;
+                    tempGroupbox.TabStop = false;
+                    grpbNumInputs.AddLast(tempGroupbox);
+
+                    // create textbox
+                    TextBox tempTextbox = new TextBox();
+                    tempTextbox.Location = new System.Drawing.Point(7, 20);
+                    tempTextbox.Name = numInput.Symbol; ;
+                    tempTextbox.Size = new System.Drawing.Size(56, 20);
+                    tempTextbox.TabIndex = 1;
+                    tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
+                    tempTextbox.TextChanged += tempTextboxInputs_TextChanged;
+                    tempTextbox.KeyPress += tempTextbox_KeyPress;
+                    // create slider
+                    TrackBar tempTrackbar = new TrackBar();
+                    tempTrackbar.Location = new System.Drawing.Point(69, 19);
+                    tempTrackbar.Name = numInput.Symbol;
+                    tempTrackbar.Size = new System.Drawing.Size(183, 45);
+                    tempTrackbar.TabIndex = 0;
+                    tempTrackbar.Minimum = Math.Min((int)(numInput.MaxVal * trackBarRescaler), (int)(numInput.MinVal * trackBarRescaler));
+                    tempTrackbar.Maximum = Math.Max((int)(numInput.MaxVal * trackBarRescaler), (int)(numInput.MinVal * trackBarRescaler)); ;
+                    tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
+                    tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
+                    tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
+                    tempTrackbar.MouseUp += tempTrackbarInputs_MouseUp;
+                    grpbNumInputs.Last().Controls.Add(tempTextbox);
+                    grpbNumInputs.Last().Controls.Add(tempTrackbar);
+
+                    counter++;
+                }
+                foreach (GroupBox groupBox in grpbNumInputs)
+                    pnlNumInputs.Controls.Add(groupBox);
+            }
+        }
+
+        void tempTextbox_KeyPress(object sender, KeyPressEventArgs e)
         {
 
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && (e.KeyChar != '.') && (e.KeyChar != '-'))
+            {
+                e.Handled = true;
+            }
+
+            // only allow one decimal point
+            if ((e.KeyChar == '.') && ((sender as TextBox).Text.IndexOf('.') > -1))
+            {
+                e.Handled = true;
+            }
+
+            // only allow '-' when at first position
+            if ((e.KeyChar == '-') && ((sender as TextBox).SelectionStart != 0))
+            {
+                e.Handled = true;
+            }
         }
     }
 }

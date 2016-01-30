@@ -11,91 +11,56 @@ namespace EnsorExternSimulation
 {
     class SocketClient
     {
-        private TcpListener tcpListener;
         private Thread mainWaitingThread;
         private TcpClient tcpClient;
         private NetworkStream streamClient;
         private bool serverStarted;
-        private bool waitingForConnection;
         private CancellationToken _ct;
         private CancellationTokenSource _cts = new CancellationTokenSource();
+        private string ip;
+        private int port;
 
         public SocketClient(string _IP, int _Port)
         {
-            IPAddress localAddr = IPAddress.Parse(_IP);
-            tcpListener = new TcpListener(localAddr, _Port);
-            serverStarted = false;
+            ip= _IP;
+            port = _Port; 
         }
 
-
-
-        public void StartServer()
-        {       
-            tcpListener.Start();
-            _ct = _cts.Token;
-            Console.WriteLine("Waiting for client ...");
-            tcpListener.BeginAcceptTcpClient(ProcessRequest, tcpListener);
-            serverStarted = true;
-        }
-
-        public void StopServer()
+        public bool GetConnected()
         {
-            // If listening has been cancelled, simply go out from method.
-            if (_ct.IsCancellationRequested)
-            {
-                return;
-            }
-
-            // Cancels listening.
-            _cts.Cancel();
-
-            // Waits a little, to guarantee 
-            // that all operation receive information about cancellation.
-            Thread.Sleep(100);
-            tcpListener.Stop();
+            if(tcpClient != null)
+             return tcpClient.Connected;
+            return false;
         }
 
-        private void ProcessRequest(IAsyncResult ar)
+        public void CloseConnection()
         {
-            //Stop if operation was cancelled.
-            if (_ct.IsCancellationRequested)
-            {
-                return;
-            }
-
-            var listener = ar.AsyncState as TcpListener;
-            if (listener == null)
-            {
-                return;
-            }
-
-            // Check cancellation again. Stop if operation was cancelled.
-            if (_ct.IsCancellationRequested)
-            {
-                return;
-            }
-
-            // Starts waiting for the next request.
-            // listener.BeginAcceptTcpClient(ProcessRequest, listener);
-
-            // Gets client and starts processing received request.
-
-            Console.WriteLine("Connected ...");
-            tcpClient = listener.EndAcceptTcpClient(ar);
-            streamClient = tcpClient.GetStream();
+            if(streamClient != null)
+                streamClient.Close();
+            if (tcpClient != null)
+                tcpClient.Close();
+            streamClient = null;
+            tcpClient = null;
         }
 
-        public bool GetServerActive()
-        {
-            return serverStarted;
+        public bool Connect(){
+            try
+            {
+                if (tcpClient == null)
+                    tcpClient = new TcpClient(ip, port);
+                else
+                    tcpClient.Connect(ip, port);
+                if (tcpClient.Connected)
+                {
+                    streamClient = tcpClient.GetStream();
+                }
+                return tcpClient.Connected;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
-
-        public static void AccptClnt(ref TcpClient client, TcpListener listener)
-        {
-            if (client == null)
-                client = listener.AcceptTcpClient();
-        }
-
 
         public bool SendData(Byte[] data, int dataLength)
         {
@@ -106,11 +71,7 @@ namespace EnsorExternSimulation
             }
             catch (Exception e1)
             {
-                Console.WriteLine("ERROR SEND DATA: " + e1.Message);
-                // Conecction lost, wait for reconnect
-                streamClient = null;
-                Console.WriteLine("Waiting for client ...");
-                tcpListener.BeginAcceptTcpClient(ProcessRequest, tcpListener);              
+                Console.WriteLine("ERROR SEND DATA: " + e1.Message);        
                 return false;
             }
             Console.WriteLine("Data send");
@@ -119,7 +80,7 @@ namespace EnsorExternSimulation
 
         public bool DataAvailable()
         {
-            if (tcpListener.Pending() || streamClient == null)
+            if (streamClient == null)
                 return false;
             return streamClient.DataAvailable;
         }

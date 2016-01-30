@@ -1,6 +1,6 @@
 ﻿namespace EnsorExternSimulation
 {
-    partial class Form1
+    partial class EnsorExternSimulation
     {
         /// <summary>
         /// Required designer variable.
@@ -41,6 +41,9 @@
             this.label4 = new System.Windows.Forms.Label();
             this.pnlNumOutputs = new System.Windows.Forms.Panel();
             this.pnlNumInputs = new System.Windows.Forms.Panel();
+            this.txtbConfigFile = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.btnBrowse = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnStartServer
@@ -161,11 +164,41 @@
             this.pnlNumInputs.Size = new System.Drawing.Size(288, 277);
             this.pnlNumInputs.TabIndex = 12;
             // 
-            // Form1
+            // txtbConfigFile
+            // 
+            this.txtbConfigFile.Location = new System.Drawing.Point(325, 26);
+            this.txtbConfigFile.Name = "txtbConfigFile";
+            this.txtbConfigFile.ReadOnly = true;
+            this.txtbConfigFile.Size = new System.Drawing.Size(223, 20);
+            this.txtbConfigFile.TabIndex = 13;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(325, 9);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(56, 13);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "Config file:";
+            // 
+            // btnBrowse
+            // 
+            this.btnBrowse.Location = new System.Drawing.Point(554, 26);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(58, 23);
+            this.btnBrowse.TabIndex = 15;
+            this.btnBrowse.Text = "Browse";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // EnsorExternSimulation
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(625, 698);
+            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txtbConfigFile);
             this.Controls.Add(this.pnlNumInputs);
             this.Controls.Add(this.pnlNumOutputs);
             this.Controls.Add(this.label4);
@@ -179,7 +212,7 @@
             this.Controls.Add(this.tbxServerPort);
             this.Controls.Add(this.tbxServerIp);
             this.Controls.Add(this.btnStartServer);
-            this.Name = "Form1";
+            this.Name = "EnsorExternSimulation";
             this.Text = "Ensor Extern Simulation";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -201,6 +234,9 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Panel pnlNumOutputs;
         private System.Windows.Forms.Panel pnlNumInputs;
+        private System.Windows.Forms.TextBox txtbConfigFile;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnBrowse;
     }
 }
 
