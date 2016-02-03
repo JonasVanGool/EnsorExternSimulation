@@ -33,10 +33,8 @@
             this.tbxServerPort = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.lstbDigOutputs = new System.Windows.Forms.ListBox();
             this.label3 = new System.Windows.Forms.Label();
             this.txtbDigOutputsFilter = new System.Windows.Forms.TextBox();
-            this.lstbDigInputs = new System.Windows.Forms.ListBox();
             this.txtbDigInputsFilter = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.pnlNumOutputs = new System.Windows.Forms.Panel();
@@ -44,6 +42,8 @@
             this.txtbConfigFile = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.btnBrowse = new System.Windows.Forms.Button();
+            this.pnlDigOutputs = new System.Windows.Forms.Panel();
+            this.pnlDigInputs = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // btnStartServer
@@ -90,21 +90,10 @@
             this.label2.TabIndex = 4;
             this.label2.Text = "Port:";
             // 
-            // lstbDigOutputs
-            // 
-            this.lstbDigOutputs.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.lstbDigOutputs.FormattingEnabled = true;
-            this.lstbDigOutputs.Items.AddRange(new object[] {
-            "Output 1"});
-            this.lstbDigOutputs.Location = new System.Drawing.Point(12, 100);
-            this.lstbDigOutputs.Name = "lstbDigOutputs";
-            this.lstbDigOutputs.Size = new System.Drawing.Size(291, 290);
-            this.lstbDigOutputs.TabIndex = 5;
-            this.lstbDigOutputs.Tag = "";
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
+            this.label3.BackColor = System.Drawing.SystemColors.Control;
             this.label3.Location = new System.Drawing.Point(12, 53);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(44, 13);
@@ -113,22 +102,13 @@
             // 
             // txtbDigOutputsFilter
             // 
+            this.txtbDigOutputsFilter.BackColor = System.Drawing.SystemColors.Window;
+            this.txtbDigOutputsFilter.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtbDigOutputsFilter.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.txtbDigOutputsFilter.Location = new System.Drawing.Point(12, 74);
             this.txtbDigOutputsFilter.Name = "txtbDigOutputsFilter";
             this.txtbDigOutputsFilter.Size = new System.Drawing.Size(137, 20);
             this.txtbDigOutputsFilter.TabIndex = 7;
-            // 
-            // lstbDigInputs
-            // 
-            this.lstbDigInputs.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.lstbDigInputs.FormattingEnabled = true;
-            this.lstbDigInputs.Items.AddRange(new object[] {
-            "Output 1"});
-            this.lstbDigInputs.Location = new System.Drawing.Point(325, 100);
-            this.lstbDigInputs.Name = "lstbDigInputs";
-            this.lstbDigInputs.Size = new System.Drawing.Size(288, 290);
-            this.lstbDigInputs.TabIndex = 8;
-            this.lstbDigInputs.Tag = "";
             // 
             // txtbDigInputsFilter
             // 
@@ -191,11 +171,31 @@
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
+            // pnlDigOutputs
+            // 
+            this.pnlDigOutputs.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.pnlDigOutputs.AutoScroll = true;
+            this.pnlDigOutputs.Location = new System.Drawing.Point(15, 100);
+            this.pnlDigOutputs.Name = "pnlDigOutputs";
+            this.pnlDigOutputs.Size = new System.Drawing.Size(288, 303);
+            this.pnlDigOutputs.TabIndex = 12;
+            // 
+            // pnlDigInputs
+            // 
+            this.pnlDigInputs.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.pnlDigInputs.AutoScroll = true;
+            this.pnlDigInputs.Location = new System.Drawing.Point(325, 100);
+            this.pnlDigInputs.Name = "pnlDigInputs";
+            this.pnlDigInputs.Size = new System.Drawing.Size(288, 303);
+            this.pnlDigInputs.TabIndex = 13;
+            // 
             // EnsorExternSimulation
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(625, 698);
+            this.Controls.Add(this.pnlDigInputs);
+            this.Controls.Add(this.pnlDigOutputs);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtbConfigFile);
@@ -203,10 +203,8 @@
             this.Controls.Add(this.pnlNumOutputs);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.txtbDigInputsFilter);
-            this.Controls.Add(this.lstbDigInputs);
             this.Controls.Add(this.txtbDigOutputsFilter);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.lstbDigOutputs);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbxServerPort);
@@ -226,10 +224,7 @@
         private System.Windows.Forms.TextBox tbxServerPort;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ListBox lstbDigOutputs;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox txtbDigOutputsFilter;
-        private System.Windows.Forms.ListBox lstbDigInputs;
         private System.Windows.Forms.TextBox txtbDigInputsFilter;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Panel pnlNumOutputs;
@@ -237,6 +232,9 @@
         private System.Windows.Forms.TextBox txtbConfigFile;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnBrowse;
+        public System.Windows.Forms.TextBox txtbDigOutputsFilter;
+        private System.Windows.Forms.Panel pnlDigOutputs;
+        private System.Windows.Forms.Panel pnlDigInputs;
     }
 }
 

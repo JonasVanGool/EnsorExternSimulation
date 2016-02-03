@@ -30,7 +30,7 @@ namespace EnsorExternSimulation
             pollData = new Thread(new ThreadStart(this.PollData));
             allowPoll = true;
             pollData.Start();
-            pollFreq = 1; //Hz
+            pollFreq = 10; //Hz
             checkReceiveFreq = 10; //Hz
         }
 
@@ -76,7 +76,7 @@ namespace EnsorExternSimulation
                 sendPackage.numOutputs[numOutput.IdxNr] = numOutput.CurrentVal;
             }
 
-            socketServer.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
+            //socketServer.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
             ensorIOController.ResetGUIBusyWriting();
         }
 
@@ -98,8 +98,9 @@ namespace EnsorExternSimulation
                 if (socketServer.DataAvailable())
                 {
                     // Read bytes
-                    Byte[] tempBuffer = new Byte[576];
-                    socketServer.ReadData(tempBuffer,576);
+                    ExternSimulationPackage tempP = new ExternSimulationPackage();
+                    Byte[] tempBuffer = new Byte[tempP.GetSize()];
+                    socketServer.ReadData(tempBuffer, tempP.GetSize());
                     receivePackage = new ExternSimulationPackage(tempBuffer);
 
                     Console.WriteLine("Recevied" + receivePackage.numInputs[3].ToString());
@@ -135,7 +136,6 @@ namespace EnsorExternSimulation
                     {
                         ensorIOController.SetNumInputBySocket(i, receivePackage.numInputs[i]);
                     }
-
                 }
             }
         }

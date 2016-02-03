@@ -19,13 +19,15 @@ namespace EnsorExternSimulation
         Thread updateGUI;
         int guiUpdateFreq;
         bool allowUpdateGUI;
-        Brush brushTrue = Brushes.LightGreen;
-        Brush brushFalse = Brushes.LightPink;
-        Brush brushTrueSelected = Brushes.Green;
-        Brush brushFalseSelected = Brushes.Red;
-        Brush brushText = Brushes.Black;
+        Color brushTrue = Color.LightGreen;
+        Color brushFalse = Color.LightPink;
+        Color brushTrueSelected = Color.Green;
+        Color brushFalseSelected = Color.Red;
+        Color brushText = Color.Black;
 
         const int yOffsetGrouboxes = 80;
+        const int yOffsetTextboxes = 15;
+        
         const int trackBarRescaler = 10;
         private LinkedList<GroupBox> grpbNumOutputs;
         private LinkedList<GroupBox> grpbNumInputs;
@@ -38,20 +40,27 @@ namespace EnsorExternSimulation
             InitializeComponent();
             this.FormClosing += Form1_Closing;
 
-            lstbDigOutputs.DrawItem += lstbOutputs_DrawItem;
-            lstbDigOutputs.MouseDoubleClick += lstbOutputs_MouseDoubleClick;
             txtbDigOutputsFilter.TextChanged += txtbDigOutputs_TextChanged;
-            lstbDigOutputs.FormattingEnabled = false;
-
-            lstbDigInputs.DrawItem += lstbInputs_DrawItem;
-            lstbDigInputs.MouseDoubleClick += lstbInputs_MouseDoubleClick;
             txtbDigInputsFilter.TextChanged += txtbDigInputs_TextChanged;
-            lstbDigInputs.FormattingEnabled = false;
+
+            pnlDigOutputs.MouseEnter += pnlDigOutputs_MouseEnter;
+            pnlDigInputs.MouseEnter += pnlDigInputs_MouseEnter;
 
             grpbNumOutputs = new LinkedList<GroupBox>();
             grpbNumInputs = new LinkedList<GroupBox>();
 
-            guiUpdateFreq = 5; //Hz
+
+            guiUpdateFreq = 10; //Hz
+        }
+
+        void pnlDigInputs_MouseEnter(object sender, EventArgs e)
+        {
+            ((Panel)sender).Focus();
+        }
+
+        void pnlDigOutputs_MouseEnter(object sender, EventArgs e)
+        {
+            ((Panel)sender).Focus();
         }
 
         private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -60,7 +69,7 @@ namespace EnsorExternSimulation
             socketClient.CloseConnection();
             allowUpdateGUI = false;
             if (updateGUI != null)
-            updateGUI.Abort();
+                updateGUI.Abort();
         }
 
         private void btnStartServer_Click(object sender, EventArgs e)
@@ -90,42 +99,6 @@ namespace EnsorExternSimulation
 
         }
 
-        void tempTrackbarOutputs_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (ensorIOSockeAdaptor == null)
-                return;
-            TrackBar parent = (TrackBar)sender;
-            ensorIOController.SetNumOutputByGUI(parent.Name, (double)parent.Value / trackBarRescaler);
-            ensorIOSockeAdaptor.SendIOUpdate();
-        }
-
-        void tempTextboxOutputs_TextChanged(object sender, EventArgs e)
-        {
-            if (ensorIOSockeAdaptor == null)
-                return;
-            TextBox parent = (TextBox)sender;
-            ensorIOController.SetNumOutputByGUI(parent.Name, parent.Text.Equals("") || parent.Text.Equals("-") ? 0 : double.Parse(parent.Text));     
-            ensorIOSockeAdaptor.SendIOUpdate();
-        }
-
-        void tempTrackbarInputs_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (ensorIOSockeAdaptor == null)
-                return;
-            TrackBar parent = (TrackBar)sender;
-            ensorIOController.SetNumInputByGUI(parent.Name, (double)parent.Value / trackBarRescaler);
-            ensorIOSockeAdaptor.SendIOUpdate();
-        }
-
-        void tempTextboxInputs_TextChanged(object sender, EventArgs e)
-        {
-            if (ensorIOSockeAdaptor == null)
-                return;
-            TextBox parent = (TextBox)sender;
-            ensorIOController.SetNumInputByGUI(parent.Name, parent.Text.Equals("") || parent.Text.Equals("-") ? 0 : double.Parse(parent.Text));
-            ensorIOSockeAdaptor.SendIOUpdate();
-        }
-
 
         private void UpdateGui()
         {
@@ -148,8 +121,8 @@ namespace EnsorExternSimulation
             {
                 if (ensorIOController.GetSocketUpdate())
                 {
-                    lstbDigOutputs.Refresh();
-                    lstbDigInputs.Refresh();
+                    updateDigOutputs();
+                    updateDigInputs();
                     updateNumOutputs();
                     updateNumInputs();
                     ensorIOController.ResetSocketUpdate();
@@ -157,6 +130,81 @@ namespace EnsorExternSimulation
                 btnStartServer.BackColor = !socketClient.GetConnected()? Color.Red : Color.Green;
             }
             
+        }
+
+        private void updateDigOutputs()
+        {
+            foreach (Control control in pnlDigOutputs.Controls)
+            {
+                //find DigOutput
+                foreach (DigOutput digOutput in ensorIOController.digOutputs)
+                {
+                    if (digOutput.Symbol.Equals(control.Name))
+                    {
+                        Label tempLabel = (Label)control;
+                        // Check if selected
+                        if(tempLabel.BackColor == brushTrueSelected || tempLabel.BackColor == brushFalseSelected){
+                            if (digOutput.CurrentVal && tempLabel.BackColor == brushFalseSelected)
+                            {
+                                tempLabel.BackColor = brushTrueSelected;
+                            }
+                            else if (!digOutput.CurrentVal && tempLabel.BackColor == brushTrueSelected)
+                            {
+                                tempLabel.BackColor = brushFalseSelected;
+                            }
+                        }else{
+                            if (digOutput.CurrentVal && tempLabel.BackColor == brushFalse)
+                            {
+                                tempLabel.BackColor = brushTrue;
+                            }
+                            else if (!digOutput.CurrentVal && tempLabel.BackColor == brushTrue)
+                            {
+                                tempLabel.BackColor = brushFalse;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void updateDigInputs()
+        {
+            foreach (Control control in pnlDigInputs.Controls)
+            {
+                //find DigInput
+                foreach (DigInput digInput in ensorIOController.digInputs)
+                {
+                    if (digInput.Symbol.Equals(control.Name))
+                    {
+                        Label tempLabel = (Label)control;
+                        // Check if selected
+                        if (tempLabel.BackColor == brushTrueSelected || tempLabel.BackColor == brushFalseSelected)
+                        {
+                            if (digInput.CurrentVal && tempLabel.BackColor == brushFalseSelected)
+                            {
+                                tempLabel.BackColor = brushTrueSelected;
+                            }
+                            else if (!digInput.CurrentVal && tempLabel.BackColor == brushTrueSelected)
+                            {
+                                tempLabel.BackColor = brushFalseSelected;
+                            }
+                        }
+                        else
+                        {
+                            if (digInput.CurrentVal && tempLabel.BackColor == brushFalse)
+                            {
+                                tempLabel.BackColor = brushTrue;
+                            }
+                            else if (!digInput.CurrentVal && tempLabel.BackColor == brushTrue)
+                            {
+                                tempLabel.BackColor = brushFalse;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
         }
 
         private void updateNumOutputs()
@@ -171,7 +219,19 @@ namespace EnsorExternSimulation
                         TextBox tempTextbox = (TextBox) control.Controls[0];
                         TrackBar tempTrackbar = (TrackBar)control.Controls[1];
                         tempTextbox.Text = numOutput.CurrentVal.ToString("0.###");
-                        tempTrackbar.Value = (int)numOutput.CurrentVal * trackBarRescaler;
+                        int tempOutput = (int)numOutput.CurrentVal * trackBarRescaler;
+                        if (tempOutput < tempTrackbar.Minimum)
+                        {
+                            tempTrackbar.Value = tempTrackbar.Minimum;
+                        }
+                        else if (tempOutput > tempTrackbar.Maximum)
+                        {
+                            tempTrackbar.Value = tempTrackbar.Maximum;
+                        }
+                        else
+                        {
+                            tempTrackbar.Value = tempOutput;
+                        }
                         break;
                     }
                 }
@@ -190,163 +250,79 @@ namespace EnsorExternSimulation
                         TextBox tempTextbox = (TextBox)control.Controls[0];
                         TrackBar tempTrackbar = (TrackBar)control.Controls[1];
                         tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
-                        tempTrackbar.Value = (int)numInput.CurrentVal * trackBarRescaler;
+                        int tempInput = (int)numInput.CurrentVal * trackBarRescaler;
+                        if(tempInput<tempTrackbar.Minimum){
+                            tempTrackbar.Value = tempTrackbar.Minimum;
+                        }
+                        else if (tempInput > tempTrackbar.Maximum)
+                        {
+                            tempTrackbar.Value = tempTrackbar.Maximum;
+                        }
+                        else
+                        {
+                            tempTrackbar.Value = tempInput;
+                        }
                         break;
                     }
                 }
             }
-        }
-        private void lstbOutputs_DrawItem(object sender, DrawItemEventArgs e)
-        {
-            if (ensorIOController == null)
-                return;
-
-            e.DrawBackground();
-            bool selected = ((e.State & DrawItemState.Selected) == DrawItemState.Selected);
-
-            int index = e.Index;
-            if (index >= 0 && index < lstbDigOutputs.Items.Count)
-            {
-                DigOutput tempDigOutput = null;
-                foreach (DigOutput digOutput in ensorIOController.digOutputs)
-                {
-                    if (digOutput.Symbol.Equals(lstbDigOutputs.Items[index]))
-                    {
-                        tempDigOutput = digOutput;
-                        break;
-                    }
-                }
-                string text = tempDigOutput.Symbol;
-                Graphics g = e.Graphics;
-
-                //background:
-                Brush backgroundBrush;
-                if (selected){
-                    backgroundBrush = tempDigOutput.CurrentVal ? brushTrueSelected : brushFalseSelected;
-                }else{
-                    backgroundBrush = tempDigOutput.CurrentVal ? brushTrue : brushFalse;
-                }
-                g.FillRectangle(backgroundBrush, e.Bounds);
-
-                //text:
-                Brush foregroundBrush = (selected) ? Brushes.Red : Brushes.Bisque;
-                g.DrawString(text, e.Font, brushText, lstbDigOutputs.GetItemRectangle(index).Location);
-            }
-
-            e.DrawFocusRectangle();
         }
 
         private void txtbDigOutputs_TextChanged(object sender, EventArgs e)
         {
+            int counter = 0;
             if (txtbDigOutputsFilter.Text != "")
             {
-                lstbDigOutputs.Items.Clear();
+                pnlDigOutputs.Controls.Clear();
                 foreach (DigOutput digOutput in ensorIOController.digOutputs)
                 {
                     if (digOutput.Symbol.Contains(txtbDigOutputsFilter.Text)){
-                        lstbDigOutputs.Items.Add(digOutput.Symbol);
+                        Label tempLabel = new Label();
+                        tempLabel.Name = digOutput.Symbol;
+                        tempLabel.Text = digOutput.Symbol;
+                        tempLabel.AutoSize = false;
+                        tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                        tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
+                        tempLabel.DoubleClick += tempLabel_DoubleClick;
+                        tempLabel.Click += tempLabelOutput_Click;
+                        tempLabel.BackColor = brushFalse;
+                        pnlDigOutputs.Controls.Add(tempLabel);
+                        counter++;
                     }
                 }
             }
-            else
-            {
-                foreach (DigOutput digOutput in ensorIOController.digOutputs)
-                    lstbDigOutputs.Items.Add(digOutput.Symbol);
-            }
-        }
-
-        void lstbOutputs_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            foreach (DigOutput digOutput in ensorIOController.digOutputs)
-            {
-                if (digOutput.Symbol.Equals(lstbDigOutputs.SelectedItem))
-                {
-                    ensorIOController.SetDigOutputByGUI(lstbDigOutputs.SelectedItem.ToString(), !digOutput.CurrentVal);
-                    ensorIOSockeAdaptor.SendIOUpdate();
-                    break;
-                }
-            }
-        }
-
-
-        private void lstbInputs_DrawItem(object sender, DrawItemEventArgs e)
-        {
-            if (ensorIOController == null)
-                return;
-
-            e.DrawBackground();
-            bool selected = ((e.State & DrawItemState.Selected) == DrawItemState.Selected);
-
-            int index = e.Index;
-            if (index >= 0 && index < lstbDigInputs.Items.Count)
-            {
-                DigInput tempDigInput = null;
-                foreach (DigInput digInput in ensorIOController.digInputs)
-                {
-                    if (digInput.Symbol.Equals(lstbDigInputs.Items[index]))
-                    {
-                        tempDigInput = digInput;
-                        break;
-                    }
-                }
-                string text = tempDigInput.Symbol;
-                Graphics g = e.Graphics;
-
-                //background:
-                Brush backgroundBrush;
-                if (selected)
-                {
-                    backgroundBrush = tempDigInput.CurrentVal ? brushTrueSelected : brushFalseSelected;
-                }
-                else
-                {
-                    backgroundBrush = tempDigInput.CurrentVal ? brushTrue : brushFalse;
-                }
-                g.FillRectangle(backgroundBrush, e.Bounds);
-
-                //text:
-                Brush foregroundBrush = (selected) ? Brushes.Red : Brushes.Bisque;
-                g.DrawString(text, e.Font, brushText, lstbDigInputs.GetItemRectangle(index).Location);
-            }
-
-            e.DrawFocusRectangle();
         }
 
         private void txtbDigInputs_TextChanged(object sender, EventArgs e)
         {
+            int counter = 0;
             if (txtbDigInputsFilter.Text != "")
             {
-                lstbDigInputs.Items.Clear();
+                pnlDigInputs.Controls.Clear();
                 foreach (DigInput digInput in ensorIOController.digInputs)
                 {
                     if (digInput.Symbol.Contains(txtbDigInputsFilter.Text))
                     {
-                        lstbDigInputs.Items.Add(digInput.Symbol);
+                        Label tempLabel = new Label();
+                        tempLabel.Name = digInput.Symbol;
+                        tempLabel.Text = digInput.Symbol;
+                        tempLabel.AutoSize = false;
+                        tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                        tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
+                        tempLabel.DoubleClick += tempLabel_DoubleClick;
+                        tempLabel.Click += tempLabelInput_Click;
+                        tempLabel.BackColor = brushFalse;
+                        pnlDigInputs.Controls.Add(tempLabel);
+                        counter++;
                     }
                 }
             }
-            else
-            {
-                foreach (DigInput digInput in ensorIOController.digInputs)
-                    lstbDigInputs.Items.Add(digInput.Symbol);
-            }
         }
 
-        void lstbInputs_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            foreach (DigInput digInput in ensorIOController.digInputs)
-            {
-                if (digInput.Symbol.Equals(lstbDigInputs.SelectedItem))
-                {
-                    ensorIOController.SetDigInputByGUI(lstbDigInputs.SelectedItem.ToString(), !digInput.CurrentVal);
-                    ensorIOSockeAdaptor.SendIOUpdate();
-                    break;
-                }
-            }
-        }
 
         private void btnBrowse_Click(object sender, EventArgs e)
-        {                      
+        {       
+            int counter = 0;   
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             openFileDialog1.Filter = "E'nsor Config files (*.EnsConfLst)|*.EnsConfLst";
             openFileDialog1.DefaultExt = "EnsConfLst"; 
@@ -355,19 +331,49 @@ namespace EnsorExternSimulation
 
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
+                txtbConfigFile.Text = openFileDialog1.FileName;
                 ensorIOController = new EnsorIOController(openFileDialog1.FileName);
-                lstbDigOutputs.Items.Clear();
-                foreach (DigOutput digOutput in ensorIOController.digOutputs)
-                    lstbDigOutputs.Items.Add(digOutput.Symbol);
 
-                lstbDigInputs.Items.Clear();
+                // Create panel digital outputs
+                pnlDigOutputs.Controls.Clear();
+                counter = 0;
+                foreach (DigOutput digOutput in ensorIOController.digOutputs)
+                {
+                    Label tempLabel = new Label();
+                    tempLabel.Name = digOutput.Symbol;
+                    tempLabel.Text = digOutput.Symbol;
+                    tempLabel.AutoSize = false;
+                    tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                    tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width-60, 14);
+                    tempLabel.DoubleClick += tempLabel_DoubleClick;
+                    tempLabel.Click += tempLabelOutput_Click;
+                    tempLabel.BackColor = brushFalse;
+                    pnlDigOutputs.Controls.Add(tempLabel);
+                    counter++;
+                }
+
+                // Create panel digital inputs
+                pnlDigInputs.Controls.Clear();
+                counter = 0;
                 foreach (DigInput digInput in ensorIOController.digInputs)
-                    lstbDigInputs.Items.Add(digInput.Symbol);
+                {
+                    Label tempLabel = new Label();
+                    tempLabel.Name = digInput.Symbol;
+                    tempLabel.Text = digInput.Symbol;
+                    tempLabel.AutoSize = false;
+                    tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                    tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
+                    tempLabel.DoubleClick += tempLabel_DoubleClick;
+                    tempLabel.Click += tempLabelInput_Click;
+                    tempLabel.BackColor = brushFalse;
+                    pnlDigInputs.Controls.Add(tempLabel);
+                    counter++;
+                }
 
                 // clear all group boxes num outputs
                 foreach (GroupBox groupBox in grpbNumOutputs)
                     groupBox.Controls.Clear();
-                int counter = 0;
+                counter = 0;
                 foreach (NumOutput numOutput in ensorIOController.numOutputs)
                 {
                     // create groupbox
@@ -388,7 +394,6 @@ namespace EnsorExternSimulation
                     tempTextbox.Size = new System.Drawing.Size(56, 20);
                     tempTextbox.TabIndex = 1;
                     tempTextbox.Text = numOutput.DefVal.ToString("0.###");
-                    tempTextbox.TextChanged += tempTextboxOutputs_TextChanged;
                     tempTextbox.KeyPress += tempTextbox_KeyPress;
                     // create slider
                     TrackBar tempTrackbar = new TrackBar();
@@ -401,7 +406,6 @@ namespace EnsorExternSimulation
                     tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
                     tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
                     tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    tempTrackbar.MouseUp += tempTrackbarOutputs_MouseUp;
                     grpbNumOutputs.Last().Controls.Add(tempTextbox);
                     grpbNumOutputs.Last().Controls.Add(tempTrackbar);
 
@@ -433,7 +437,6 @@ namespace EnsorExternSimulation
                     tempTextbox.Size = new System.Drawing.Size(56, 20);
                     tempTextbox.TabIndex = 1;
                     tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
-                    tempTextbox.TextChanged += tempTextboxInputs_TextChanged;
                     tempTextbox.KeyPress += tempTextbox_KeyPress;
                     // create slider
                     TrackBar tempTrackbar = new TrackBar();
@@ -446,7 +449,6 @@ namespace EnsorExternSimulation
                     tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
                     tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
                     tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    tempTrackbar.MouseUp += tempTrackbarInputs_MouseUp;
                     grpbNumInputs.Last().Controls.Add(tempTextbox);
                     grpbNumInputs.Last().Controls.Add(tempTrackbar);
 
@@ -455,6 +457,33 @@ namespace EnsorExternSimulation
                 foreach (GroupBox groupBox in grpbNumInputs)
                     pnlNumInputs.Controls.Add(groupBox);
             }
+        }
+
+        void tempLabelOutput_Click(object sender, EventArgs e)
+        {
+            foreach (Label label in pnlDigOutputs.Controls)
+            {
+                if(label.BackColor == brushFalseSelected || label.BackColor == brushTrueSelected)
+                    label.BackColor = ((Label)sender).BackColor == brushTrueSelected ? brushTrue : brushFalse;
+            }
+
+            ((Label)sender).BackColor = ((Label)sender).BackColor == brushTrue ? brushTrueSelected : brushFalseSelected;
+        }
+
+        void tempLabelInput_Click(object sender, EventArgs e)
+        {
+            foreach (Label label in pnlDigInputs.Controls)
+            {
+                if (label.BackColor == brushFalseSelected || label.BackColor == brushTrueSelected)
+                    label.BackColor = ((Label)sender).BackColor == brushTrueSelected ? brushTrue : brushFalse;
+            }
+
+            ((Label)sender).BackColor = ((Label)sender).BackColor == brushTrue ? brushTrueSelected : brushFalseSelected;
+        }
+
+        void tempLabel_DoubleClick(object sender, EventArgs e)
+        {
+            
         }
 
         void tempTextbox_KeyPress(object sender, KeyPressEventArgs e)
