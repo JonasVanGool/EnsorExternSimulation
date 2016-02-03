@@ -76,7 +76,7 @@ namespace EnsorExternSimulation
                 sendPackage.numOutputs[numOutput.IdxNr] = numOutput.CurrentVal;
             }
 
-            //socketServer.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
+            socketServer.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
             ensorIOController.ResetGUIBusyWriting();
         }
 

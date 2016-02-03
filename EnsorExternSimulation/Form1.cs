@@ -271,24 +271,21 @@ namespace EnsorExternSimulation
         private void txtbDigOutputs_TextChanged(object sender, EventArgs e)
         {
             int counter = 0;
-            if (txtbDigOutputsFilter.Text != "")
+            pnlDigOutputs.Controls.Clear();
+            foreach (DigOutput digOutput in ensorIOController.digOutputs)
             {
-                pnlDigOutputs.Controls.Clear();
-                foreach (DigOutput digOutput in ensorIOController.digOutputs)
-                {
-                    if (digOutput.Symbol.Contains(txtbDigOutputsFilter.Text)){
-                        Label tempLabel = new Label();
-                        tempLabel.Name = digOutput.Symbol;
-                        tempLabel.Text = digOutput.Symbol;
-                        tempLabel.AutoSize = false;
-                        tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
-                        tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
-                        tempLabel.DoubleClick += tempLabel_DoubleClick;
-                        tempLabel.Click += tempLabelOutput_Click;
-                        tempLabel.BackColor = brushFalse;
-                        pnlDigOutputs.Controls.Add(tempLabel);
-                        counter++;
-                    }
+                if (txtbDigOutputsFilter.Text == "" || digOutput.Symbol.Contains(txtbDigOutputsFilter.Text)){
+                    Label tempLabel = new Label();
+                    tempLabel.Name = digOutput.Symbol;
+                    tempLabel.Text = digOutput.Symbol;
+                    tempLabel.AutoSize = false;
+                    tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                    tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
+                    tempLabel.DoubleClick += tempLabelOutput_DoubleClick;
+                    tempLabel.Click += tempLabelOutput_Click;
+                    tempLabel.BackColor = brushFalse;
+                    pnlDigOutputs.Controls.Add(tempLabel);
+                    counter++;
                 }
             }
         }
@@ -296,25 +293,22 @@ namespace EnsorExternSimulation
         private void txtbDigInputs_TextChanged(object sender, EventArgs e)
         {
             int counter = 0;
-            if (txtbDigInputsFilter.Text != "")
+            pnlDigInputs.Controls.Clear();
+            foreach (DigInput digInput in ensorIOController.digInputs)
             {
-                pnlDigInputs.Controls.Clear();
-                foreach (DigInput digInput in ensorIOController.digInputs)
+                if (txtbDigInputsFilter.Text == "" || digInput.Symbol.Contains(txtbDigInputsFilter.Text))
                 {
-                    if (digInput.Symbol.Contains(txtbDigInputsFilter.Text))
-                    {
-                        Label tempLabel = new Label();
-                        tempLabel.Name = digInput.Symbol;
-                        tempLabel.Text = digInput.Symbol;
-                        tempLabel.AutoSize = false;
-                        tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
-                        tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
-                        tempLabel.DoubleClick += tempLabel_DoubleClick;
-                        tempLabel.Click += tempLabelInput_Click;
-                        tempLabel.BackColor = brushFalse;
-                        pnlDigInputs.Controls.Add(tempLabel);
-                        counter++;
-                    }
+                    Label tempLabel = new Label();
+                    tempLabel.Name = digInput.Symbol;
+                    tempLabel.Text = digInput.Symbol;
+                    tempLabel.AutoSize = false;
+                    tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
+                    tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
+                    tempLabel.DoubleClick += tempLabelInput_DoubleClick;
+                    tempLabel.Click += tempLabelInput_Click;
+                    tempLabel.BackColor = brushFalse;
+                    pnlDigInputs.Controls.Add(tempLabel);
+                    counter++;
                 }
             }
         }
@@ -345,7 +339,7 @@ namespace EnsorExternSimulation
                     tempLabel.AutoSize = false;
                     tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
                     tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width-60, 14);
-                    tempLabel.DoubleClick += tempLabel_DoubleClick;
+                    tempLabel.DoubleClick += tempLabelOutput_DoubleClick;
                     tempLabel.Click += tempLabelOutput_Click;
                     tempLabel.BackColor = brushFalse;
                     pnlDigOutputs.Controls.Add(tempLabel);
@@ -363,7 +357,7 @@ namespace EnsorExternSimulation
                     tempLabel.AutoSize = false;
                     tempLabel.Location = new System.Drawing.Point(9, 4 + counter * yOffsetTextboxes);
                     tempLabel.Size = new System.Drawing.Size(pnlDigInputs.Width - 60, 14);
-                    tempLabel.DoubleClick += tempLabel_DoubleClick;
+                    tempLabel.DoubleClick += tempLabelInput_DoubleClick;
                     tempLabel.Click += tempLabelInput_Click;
                     tempLabel.BackColor = brushFalse;
                     pnlDigInputs.Controls.Add(tempLabel);
@@ -481,9 +475,22 @@ namespace EnsorExternSimulation
             ((Label)sender).BackColor = ((Label)sender).BackColor == brushTrue ? brushTrueSelected : brushFalseSelected;
         }
 
-        void tempLabel_DoubleClick(object sender, EventArgs e)
+        void tempLabelOutput_DoubleClick(object sender, EventArgs e)
         {
-            
+            if (((Label)sender).BackColor == brushTrue || ((Label)sender).BackColor == brushTrueSelected)
+                ensorIOController.SetDigOutputByGUI(((Label)sender).Text, false);
+            else
+                ensorIOController.SetDigOutputByGUI(((Label)sender).Text, true);
+            ensorIOSockeAdaptor.SendIOUpdate();
+        }
+
+        void tempLabelInput_DoubleClick(object sender, EventArgs e)
+        {
+            if (((Label)sender).BackColor == brushTrue || ((Label)sender).BackColor == brushTrueSelected)
+                ensorIOController.SetDigInputByGUI(((Label)sender).Text, false);
+            else
+                ensorIOController.SetDigInputByGUI(((Label)sender).Text, true);
+            ensorIOSockeAdaptor.SendIOUpdate();
         }
 
         void tempTextbox_KeyPress(object sender, KeyPressEventArgs e)
