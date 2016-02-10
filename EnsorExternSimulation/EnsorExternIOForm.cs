@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace EnsorExternSimulation
 {
-    public partial class EnsorExternSimulation : Form
+    public partial class EnsorExternIO : Form
     {
         SocketClient socketClient;
         EnsorIOController ensorIOController;
@@ -35,13 +35,14 @@ namespace EnsorExternSimulation
 
         delegate void UpdateGraphicsCallback();
 
-        public EnsorExternSimulation()
+        public EnsorExternIO()
         {
             InitializeComponent();
             this.FormClosing += Form1_Closing;
 
             txtbDigOutputsFilter.TextChanged += txtbDigOutputs_TextChanged;
             txtbDigInputsFilter.TextChanged += txtbDigInputs_TextChanged;
+            tbxServerPort.KeyPress += tbxServerPort_KeyPress;
 
             pnlDigOutputs.MouseEnter += pnlDigOutputs_MouseEnter;
             pnlDigInputs.MouseEnter += pnlDigInputs_MouseEnter;
@@ -49,8 +50,18 @@ namespace EnsorExternSimulation
             grpbNumOutputs = new LinkedList<GroupBox>();
             grpbNumInputs = new LinkedList<GroupBox>();
 
-
+            updateGUI = new Thread(new ThreadStart(this.UpdateGui));
+            allowUpdateGUI = true;
+            updateGUI.Start();
             guiUpdateFreq = 10; //Hz
+        }
+
+        void tbxServerPort_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
         }
 
         void pnlDigInputs_MouseEnter(object sender, EventArgs e)
@@ -65,8 +76,10 @@ namespace EnsorExternSimulation
 
         private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ensorIOSockeAdaptor.StopService();
-            socketClient.CloseConnection();
+            if (ensorIOSockeAdaptor != null)
+                ensorIOSockeAdaptor.StopService();
+            if(socketClient != null)
+                socketClient.CloseConnection();
             allowUpdateGUI = false;
             if (updateGUI != null)
                 updateGUI.Abort();
@@ -74,27 +87,27 @@ namespace EnsorExternSimulation
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
-            if(ensorIOController==null){
-                return;
-            }
-
-            if (!connected)
-            {   
-                socketClient = new SocketClient(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
-                socketClient.Connect();
-                ensorIOSockeAdaptor = new EnsorIOSocketAdaptor(ensorIOController, socketClient);
-                allowUpdateGUI = true;
-                updateGUI = new Thread(new ThreadStart(this.UpdateGui));
-                updateGUI.Start();
-                connected = !connected;
-                return;
-            }
-            if (connected)
+            if (ensorIOController == null)
             {
-                ensorIOSockeAdaptor.StopService();
-                socketClient.CloseConnection();
-                connected = !connected;
                 return;
+            }
+            //Reconnect
+            //close
+            try{
+                ensorIOSockeAdaptor.StopService();
+                ensorIOSockeAdaptor = null;
+            }catch(Exception ex){
+            }
+            try{
+                socketClient.CloseConnection();
+                socketClient = null;
+            }catch(Exception ex){
+            }
+            //reconnect
+            socketClient = new SocketClient(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
+            if (socketClient.Connect())
+            {
+                ensorIOSockeAdaptor = new EnsorIOSocketAdaptor(ref ensorIOController, socketClient);
             }
 
         }
@@ -115,21 +128,33 @@ namespace EnsorExternSimulation
             if (this.InvokeRequired)
             {
                 UpdateGraphicsCallback n = new UpdateGraphicsCallback(updateGraphics);
-                this.Invoke(n, new object[] { });
+                try { 
+                    this.Invoke(n, new object[] { });
+                }
+                catch (Exception e)
+                {
+                    // do nothing just quit
+                }
             }
             else
             {
-                if (ensorIOController.GetSocketUpdate())
+                if (socketClient != null)
                 {
-                    updateDigOutputs();
-                    updateDigInputs();
-                    updateNumOutputs();
-                    updateNumInputs();
-                    ensorIOController.ResetSocketUpdate();
-                 }
-                btnStartServer.BackColor = !socketClient.GetConnected()? Color.Red : Color.Green;
-            }
-            
+                    btnStartServer.BackColor = !socketClient.GetConnected() ? Color.Red : Color.Green;
+                    if (ensorIOController != null && ensorIOSockeAdaptor != null)
+                    {
+                        if (ensorIOController.GetSocketUpdate())
+                        {
+                            lblConnectionSpeed.Text = ensorIOSockeAdaptor.GetLastDeltaTime().ToString();
+                            updateDigOutputs();
+                            updateDigInputs();
+                            updateNumOutputs();
+                            updateNumInputs();
+                            ensorIOController.ResetSocketUpdate();
+                        }
+                    }
+                }
+            }       
         }
 
         private void updateDigOutputs()
@@ -217,21 +242,10 @@ namespace EnsorExternSimulation
                     if (numOutput.Symbol.Equals(control.Name))
                     {
                         TextBox tempTextbox = (TextBox) control.Controls[0];
+                        if (tempTextbox.Focused)
+                            break;
                         TrackBar tempTrackbar = (TrackBar)control.Controls[1];
                         tempTextbox.Text = numOutput.CurrentVal.ToString("0.###");
-                        int tempOutput = (int)numOutput.CurrentVal * trackBarRescaler;
-                        if (tempOutput < tempTrackbar.Minimum)
-                        {
-                            tempTrackbar.Value = tempTrackbar.Minimum;
-                        }
-                        else if (tempOutput > tempTrackbar.Maximum)
-                        {
-                            tempTrackbar.Value = tempTrackbar.Maximum;
-                        }
-                        else
-                        {
-                            tempTrackbar.Value = tempOutput;
-                        }
                         break;
                     }
                 }
@@ -248,20 +262,10 @@ namespace EnsorExternSimulation
                     if (numInput.Symbol.Equals(control.Name))
                     {
                         TextBox tempTextbox = (TextBox)control.Controls[0];
+                        if (tempTextbox.Focused)
+                            break;
                         TrackBar tempTrackbar = (TrackBar)control.Controls[1];
                         tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
-                        int tempInput = (int)numInput.CurrentVal * trackBarRescaler;
-                        if(tempInput<tempTrackbar.Minimum){
-                            tempTrackbar.Value = tempTrackbar.Minimum;
-                        }
-                        else if (tempInput > tempTrackbar.Maximum)
-                        {
-                            tempTrackbar.Value = tempTrackbar.Maximum;
-                        }
-                        else
-                        {
-                            tempTrackbar.Value = tempInput;
-                        }
                         break;
                     }
                 }
@@ -327,6 +331,8 @@ namespace EnsorExternSimulation
             {
                 txtbConfigFile.Text = openFileDialog1.FileName;
                 ensorIOController = new EnsorIOController(openFileDialog1.FileName);
+                txtbDigInputsFilter.Enabled = true;
+                txtbDigOutputsFilter.Enabled = true;
 
                 // Create panel digital outputs
                 pnlDigOutputs.Controls.Clear();
@@ -388,7 +394,8 @@ namespace EnsorExternSimulation
                     tempTextbox.Size = new System.Drawing.Size(56, 20);
                     tempTextbox.TabIndex = 1;
                     tempTextbox.Text = numOutput.DefVal.ToString("0.###");
-                    tempTextbox.KeyPress += tempTextbox_KeyPress;
+                    tempTextbox.KeyPress += tempTextboxOutput_KeyPress;
+                    tempTextbox.TextChanged += tempTextboxOutput_TextChanged;
                     // create slider
                     TrackBar tempTrackbar = new TrackBar();
                     tempTrackbar.Location = new System.Drawing.Point(69, 19);
@@ -431,7 +438,8 @@ namespace EnsorExternSimulation
                     tempTextbox.Size = new System.Drawing.Size(56, 20);
                     tempTextbox.TabIndex = 1;
                     tempTextbox.Text = numInput.CurrentVal.ToString("0.###");
-                    tempTextbox.KeyPress += tempTextbox_KeyPress;
+                    tempTextbox.KeyPress += tempTextboxInput_KeyPress;
+                    tempTextbox.TextChanged += tempTextboxInput_TextChanged;
                     // create slider
                     TrackBar tempTrackbar = new TrackBar();
                     tempTrackbar.Location = new System.Drawing.Point(69, 19);
@@ -450,6 +458,59 @@ namespace EnsorExternSimulation
                 }
                 foreach (GroupBox groupBox in grpbNumInputs)
                     pnlNumInputs.Controls.Add(groupBox);
+            }
+        }
+
+        void tempTextboxOutput_TextChanged(object sender, EventArgs e)
+        {
+            TextBox tempTexBox = (TextBox) sender;
+            if (tempTexBox.Text.Equals("") || tempTexBox.Text.Equals("-"))
+                return;
+            foreach (GroupBox groupBox in grpbNumOutputs)
+            {
+                if (groupBox.Name.Equals(tempTexBox.Name))
+                {
+                    TrackBar tempTrackbar = ((TrackBar)groupBox.Controls[1]);
+                        int tempInput = (int) double.Parse(tempTexBox.Text) * trackBarRescaler;
+                        if(tempInput<tempTrackbar.Minimum){
+                            tempTrackbar.Value = tempTrackbar.Minimum;
+                        }
+                        else if (tempInput > tempTrackbar.Maximum)
+                        {
+                            tempTrackbar.Value = tempTrackbar.Maximum;
+                        }
+                        else
+                        {
+                            tempTrackbar.Value = tempInput;
+                        }
+                }
+            }
+        }
+
+        void tempTextboxInput_TextChanged(object sender, EventArgs e)
+        {
+            TextBox tempTexBox = (TextBox)sender;
+            if (tempTexBox.Text.Equals("") || tempTexBox.Text.Equals("-"))
+                return;
+            foreach (GroupBox groupBox in grpbNumInputs)
+            {
+                if (groupBox.Name.Equals(tempTexBox.Name))
+                {
+                    TrackBar tempTrackbar = ((TrackBar)groupBox.Controls[1]);
+                    int tempInput = (int)double.Parse(tempTexBox.Text) * trackBarRescaler;
+                    if (tempInput < tempTrackbar.Minimum)
+                    {
+                        tempTrackbar.Value = tempTrackbar.Minimum;
+                    }
+                    else if (tempInput > tempTrackbar.Maximum)
+                    {
+                        tempTrackbar.Value = tempTrackbar.Maximum;
+                    }
+                    else
+                    {
+                        tempTrackbar.Value = tempInput;
+                    }
+                }
             }
         }
 
@@ -493,8 +554,45 @@ namespace EnsorExternSimulation
             ensorIOSockeAdaptor.SendIOUpdate();
         }
 
-        void tempTextbox_KeyPress(object sender, KeyPressEventArgs e)
+        void tempTextboxInput_KeyPress(object sender, KeyPressEventArgs e)
         {
+            TextBox tempTextBox = (TextBox)sender;
+            if (e.KeyChar == (char)13 && tempTextBox.Text != "")
+            {
+                pnlDigInputs.Focus();
+                ensorIOController.SetNumInputByGUI(tempTextBox.Name, double.Parse(tempTextBox.Text));
+                ensorIOSockeAdaptor.SendIOUpdate();
+                e.Handled = true;
+            }
+
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && (e.KeyChar != '.') && (e.KeyChar != '-'))
+            {
+                e.Handled = true;
+            }
+
+            // only allow one decimal point
+            if ((e.KeyChar == '.') && ((sender as TextBox).Text.IndexOf('.') > -1))
+            {
+                e.Handled = true;
+            }
+
+            // only allow '-' when at first position
+            if ((e.KeyChar == '-') && ((sender as TextBox).SelectionStart != 0))
+            {
+                e.Handled = true;
+            }
+        }
+
+        void tempTextboxOutput_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            TextBox tempTextBox = (TextBox)sender;
+            if (e.KeyChar == (char)13 && tempTextBox.Text != "")
+            {
+                pnlDigOutputs.Focus();
+                ensorIOController.SetNumOutputByGUI(tempTextBox.Name, double.Parse(tempTextBox.Text));
+                ensorIOSockeAdaptor.SendIOUpdate();
+                e.Handled = true;
+            }
 
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && (e.KeyChar != '.') && (e.KeyChar != '-'))
             {

@@ -1,6 +1,6 @@
 ﻿namespace EnsorExternSimulation
 {
-    partial class EnsorExternSimulation
+    partial class EnsorExternIO
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EnsorExternIO));
             this.btnStartServer = new System.Windows.Forms.Button();
             this.tbxServerIp = new System.Windows.Forms.TextBox();
             this.tbxServerPort = new System.Windows.Forms.TextBox();
@@ -44,6 +45,8 @@
             this.btnBrowse = new System.Windows.Forms.Button();
             this.pnlDigOutputs = new System.Windows.Forms.Panel();
             this.pnlDigInputs = new System.Windows.Forms.Panel();
+            this.lblConnectionSpeed = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnStartServer
@@ -104,6 +107,7 @@
             // 
             this.txtbDigOutputsFilter.BackColor = System.Drawing.SystemColors.Window;
             this.txtbDigOutputsFilter.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.txtbDigOutputsFilter.Enabled = false;
             this.txtbDigOutputsFilter.ImeMode = System.Windows.Forms.ImeMode.Disable;
             this.txtbDigOutputsFilter.Location = new System.Drawing.Point(12, 74);
             this.txtbDigOutputsFilter.Name = "txtbDigOutputsFilter";
@@ -112,6 +116,7 @@
             // 
             // txtbDigInputsFilter
             // 
+            this.txtbDigInputsFilter.Enabled = false;
             this.txtbDigInputsFilter.Location = new System.Drawing.Point(325, 74);
             this.txtbDigInputsFilter.Name = "txtbDigInputsFilter";
             this.txtbDigInputsFilter.Size = new System.Drawing.Size(137, 20);
@@ -189,11 +194,30 @@
             this.pnlDigInputs.Size = new System.Drawing.Size(288, 303);
             this.pnlDigInputs.TabIndex = 13;
             // 
-            // EnsorExternSimulation
+            // lblConnectionSpeed
+            // 
+            this.lblConnectionSpeed.AutoSize = true;
+            this.lblConnectionSpeed.Location = new System.Drawing.Point(261, 32);
+            this.lblConnectionSpeed.Name = "lblConnectionSpeed";
+            this.lblConnectionSpeed.Size = new System.Drawing.Size(0, 13);
+            this.lblConnectionSpeed.TabIndex = 16;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(264, 9);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(37, 13);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Delay:";
+            // 
+            // EnsorExternIO
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(625, 698);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.lblConnectionSpeed);
             this.Controls.Add(this.pnlDigInputs);
             this.Controls.Add(this.pnlDigOutputs);
             this.Controls.Add(this.btnBrowse);
@@ -210,8 +234,9 @@
             this.Controls.Add(this.tbxServerPort);
             this.Controls.Add(this.tbxServerIp);
             this.Controls.Add(this.btnStartServer);
-            this.Name = "EnsorExternSimulation";
-            this.Text = "Ensor Extern Simulation";
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "EnsorExternIO";
+            this.Text = "Ensor Extern IO";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -235,6 +260,8 @@
         public System.Windows.Forms.TextBox txtbDigOutputsFilter;
         private System.Windows.Forms.Panel pnlDigOutputs;
         private System.Windows.Forms.Panel pnlDigInputs;
+        private System.Windows.Forms.Label lblConnectionSpeed;
+        private System.Windows.Forms.Label label6;
     }
 }
 

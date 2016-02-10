@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -10,7 +11,7 @@ namespace EnsorExternSimulation
     class EnsorIOSocketAdaptor
     {
         private EnsorIOController ensorIOController;
-        private SocketClient socketServer;
+        private SocketClient socketClient;
         private Thread waitForReceive;
         private Thread pollData;
         private ExternSimulationPackage receivePackage;
@@ -19,29 +20,41 @@ namespace EnsorExternSimulation
         private int checkReceiveFreq;
         private bool allowReceive;
         private bool allowPoll;
+        private Stopwatch stopWatch;
+        private long lastTimeSend;
+        private long lastTimeReceived;
+        private long deltaTime;
 
-        public EnsorIOSocketAdaptor(EnsorIOController ioController, SocketClient server)
+        public EnsorIOSocketAdaptor(ref EnsorIOController ioController, SocketClient client)
         {
+            stopWatch = new Stopwatch();
+            stopWatch.Start();
             ensorIOController = ioController;
-            socketServer = server;
+            socketClient = client;
             waitForReceive = new Thread(new ThreadStart(this.WaitForReceive));
             allowReceive= true;
             waitForReceive.Start();
-            pollData = new Thread(new ThreadStart(this.PollData));
-            allowPoll = true;
-            pollData.Start();
-            pollFreq = 10; //Hz
-            checkReceiveFreq = 10; //Hz
+            //pollData = new Thread(new ThreadStart(this.PollData));
+            //pollData.Start();
+            //allowPoll = true; 
+            //pollFreq = 10; //Hz
+            this.PollData();
+            checkReceiveFreq = 20; //Hz
         }
 
         public void StopService()
         {
             allowPoll = false;
-            pollData.Abort();
+         //   pollData.Abort();
             allowReceive = false;
             waitForReceive.Abort();
         }
-        
+
+        public long GetLastDeltaTime()
+        {
+            return deltaTime;
+        }
+
         public void SendIOUpdate()
         {
             // convert EnsorIOcontroller in to Extern simulation packege
@@ -76,12 +89,13 @@ namespace EnsorExternSimulation
                 sendPackage.numOutputs[numOutput.IdxNr] = numOutput.CurrentVal;
             }
 
-            socketServer.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
+            socketClient.SendData(sendPackage.ToByteArray(), sendPackage.ToByteArray().Length);
             ensorIOController.ResetGUIBusyWriting();
         }
 
         private void PollData()
         {
+            /*
             while (allowPoll)
             {
                 Byte[] tempArray = new Byte[1];
@@ -89,18 +103,28 @@ namespace EnsorExternSimulation
                 socketServer.SendData(tempArray, tempArray.Length);
                 Thread.Sleep((int) ((double)1 /(double)pollFreq * 1000));
             }
+            */
+            Byte[] tempArray = new Byte[1];
+            tempArray[0] = 0x70; //'p'
+            socketClient.SendData(tempArray, tempArray.Length);
+            lastTimeSend = stopWatch.ElapsedMilliseconds;
         }
 
         private void WaitForReceive(){
             while (allowReceive)
             {
-                Thread.Sleep((int)((double)1 / (double)checkReceiveFreq * 1000));    
-                if (socketServer.DataAvailable())
+                int sleep = (int)(1.0 / (double)checkReceiveFreq * 1000);
+                Thread.Sleep(sleep);    
+                if (socketClient.DataAvailable())
                 {
+                    // Update receive time
+                    lastTimeReceived = stopWatch.ElapsedMilliseconds;
+                    deltaTime = lastTimeReceived - lastTimeSend;
+
                     // Read bytes
                     ExternSimulationPackage tempP = new ExternSimulationPackage();
                     Byte[] tempBuffer = new Byte[tempP.GetSize()];
-                    socketServer.ReadData(tempBuffer, tempP.GetSize());
+                    socketClient.ReadData(tempBuffer, tempP.GetSize());
                     receivePackage = new ExternSimulationPackage(tempBuffer);
 
                     Console.WriteLine("Recevied" + receivePackage.numInputs[3].ToString());
@@ -136,6 +160,16 @@ namespace EnsorExternSimulation
                     {
                         ensorIOController.SetNumInputBySocket(i, receivePackage.numInputs[i]);
                     }
+
+                    // Resend poll message
+                    if (!ensorIOController.GetGUIBusyWriting())
+                    {
+                        this.PollData();
+                    }
+                    else
+                    {
+                        SendIOUpdate();
+                    }                       
                 }
             }
         }

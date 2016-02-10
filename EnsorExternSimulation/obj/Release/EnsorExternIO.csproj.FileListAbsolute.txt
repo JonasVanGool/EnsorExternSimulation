@@ -1,0 +1,9 @@
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternIO.exe
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternSimulation.EnsorExternIO.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternIO.Properties.Resources.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternIO.csproj.GenerateResource.Cache
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternIO.pdb
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Release\EnsorExternIO.exe.config
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Release\EnsorExternIO.exe
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Release\EnsorExternIO.pdb
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Release\EnsorExternIO.csprojResolveAssemblyReference.cache

@@ -240,6 +240,10 @@ namespace EnsorExternSimulation
         public void ResetGUIBusyWriting(){
             GUI_BusyWriting = false;
         }
+        public bool GetGUIBusyWriting()
+        {
+            return GUI_BusyWriting;
+        }
     }
 
     class DigOutput

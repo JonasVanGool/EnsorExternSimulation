@@ -14,9 +14,17 @@ namespace EnsorExternSimulation
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new EnsorExternSimulation());          
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new EnsorExternIO());
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Global error: " + e.Message);
+            }
+        
         }
     }
 }
