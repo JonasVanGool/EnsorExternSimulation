@@ -11,11 +11,8 @@ namespace EnsorExternSimulation
 {
     class SocketClient
     {
-        private Thread mainWaitingThread;
         private TcpClient tcpClient;
         private NetworkStream streamClient;
-        private bool serverStarted;
-        private CancellationToken _ct;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private string ip;
         private int port;
@@ -24,13 +21,6 @@ namespace EnsorExternSimulation
         {
             ip= _IP;
             port = _Port; 
-        }
-
-        public bool GetConnected()
-        {
-            if(tcpClient != null)
-             return tcpClient.Connected;
-            return false;
         }
 
         public void CloseConnection()
@@ -50,6 +40,7 @@ namespace EnsorExternSimulation
                     tcpClient = new TcpClient(ip, port);
                 else
                     tcpClient.Connect(ip, port);
+
                 if (tcpClient.Connected)
                 {
                     streamClient = tcpClient.GetStream();

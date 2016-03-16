@@ -13,9 +13,8 @@ namespace EnsorExternSimulation
 {
     public partial class EnsorExternIO : Form
     {
-        SocketClient socketClient;
         EnsorIOController ensorIOController;
-        EnsorIOSocketAdaptor ensorIOSockeAdaptor;
+        EnsorIOSocketAdaptor ensorIOSocketAdaptor;
         Thread updateGUI;
         int guiUpdateFreq;
         bool allowUpdateGUI;
@@ -29,8 +28,6 @@ namespace EnsorExternSimulation
         const int yOffsetTextboxes = 15;
         
         const int trackBarRescaler = 10;
-        private LinkedList<GroupBox> grpbNumOutputs;
-        private LinkedList<GroupBox> grpbNumInputs;
         private bool connected = false;
 
         delegate void UpdateGraphicsCallback();
@@ -47,8 +44,6 @@ namespace EnsorExternSimulation
             pnlDigOutputs.MouseEnter += pnlDigOutputs_MouseEnter;
             pnlDigInputs.MouseEnter += pnlDigInputs_MouseEnter;
 
-            grpbNumOutputs = new LinkedList<GroupBox>();
-            grpbNumInputs = new LinkedList<GroupBox>();
 
             updateGUI = new Thread(new ThreadStart(this.UpdateGui));
             allowUpdateGUI = true;
@@ -76,10 +71,10 @@ namespace EnsorExternSimulation
 
         private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (ensorIOSockeAdaptor != null)
-                ensorIOSockeAdaptor.StopService();
-            if(socketClient != null)
-                socketClient.CloseConnection();
+            // Close connection on socketAdaptor
+            if (ensorIOSocketAdaptor != null)
+                ensorIOSocketAdaptor.CloseConnection();
+            // Stop thread gui;
             allowUpdateGUI = false;
             if (updateGUI != null)
                 updateGUI.Abort();
@@ -87,29 +82,27 @@ namespace EnsorExternSimulation
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
+            // Exit when there is no IO controller
             if (ensorIOController == null)
-            {
                 return;
-            }
-            //Reconnect
-            //close
-            try{
-                ensorIOSockeAdaptor.StopService();
-                ensorIOSockeAdaptor = null;
-            }catch(Exception ex){
-            }
-            try{
-                socketClient.CloseConnection();
-                socketClient = null;
-            }catch(Exception ex){
-            }
-            //reconnect
-            socketClient = new SocketClient(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
-            if (socketClient.Connect())
+
+            // Create new instacne of ensorIOSocketAdaptor
+            if (ensorIOSocketAdaptor == null)
             {
-                ensorIOSockeAdaptor = new EnsorIOSocketAdaptor(ref ensorIOController, socketClient);
+                // Create new Socketadaptor
+                ensorIOSocketAdaptor = new EnsorIOSocketAdaptor(ref ensorIOController);
             }
 
+            // Check if current connection is alive
+            if (ensorIOSocketAdaptor.ConnectionAlive())
+            {
+                ensorIOSocketAdaptor.CloseConnection();
+                ensorIOSocketAdaptor.MakeConnection(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
+                return;
+            }
+
+            // Else make new connection
+            ensorIOSocketAdaptor.MakeConnection(tbxServerIp.Text, int.Parse(tbxServerPort.Text));
         }
 
 
@@ -137,23 +130,20 @@ namespace EnsorExternSimulation
                 }
             }
             else
-            {
-                if (socketClient != null)
+            {     
+                if (ensorIOController != null && ensorIOSocketAdaptor != null)
                 {
-                    btnStartServer.BackColor = !socketClient.GetConnected() ? Color.Red : Color.Green;
-                    if (ensorIOController != null && ensorIOSockeAdaptor != null)
+                    btnStartServer.BackColor = !ensorIOSocketAdaptor.ConnectionAlive() ? Color.Red : Color.Green;
+                    if (ensorIOController.GetSocketUpdate())
                     {
-                        if (ensorIOController.GetSocketUpdate())
-                        {
-                            lblConnectionSpeed.Text = ensorIOSockeAdaptor.GetLastDeltaTime().ToString();
-                            updateDigOutputs();
-                            updateDigInputs();
-                            updateNumOutputs();
-                            updateNumInputs();
-                            ensorIOController.ResetSocketUpdate();
-                        }
+                        lblConnectionSpeed.Text = ensorIOSocketAdaptor.GetTimeToLastReceive().ToString();
+                        updateDigOutputs();
+                        updateDigInputs();
+                        updateNumOutputs();
+                        updateNumInputs();
+                        ensorIOController.ResetSocketUpdate();
                     }
-                }
+                }         
             }       
         }
 
@@ -327,6 +317,11 @@ namespace EnsorExternSimulation
             openFileDialog1.FilterIndex = 2;
             openFileDialog1.RestoreDirectory = true;
 
+            allowUpdateGUI = false;
+            updateGUI.Abort();
+            while (updateGUI.IsAlive)
+            {}
+
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 txtbConfigFile.Text = openFileDialog1.FileName;
@@ -371,8 +366,7 @@ namespace EnsorExternSimulation
                 }
 
                 // clear all group boxes num outputs
-                foreach (GroupBox groupBox in grpbNumOutputs)
-                    groupBox.Controls.Clear();
+                pnlNumOutputs.Controls.Clear();
                 counter = 0;
                 foreach (NumOutput numOutput in ensorIOController.numOutputs)
                 {
@@ -384,7 +378,6 @@ namespace EnsorExternSimulation
                     tempGroupbox.Size = new System.Drawing.Size(258, 69);
                     tempGroupbox.TabIndex = 2;
                     tempGroupbox.TabStop = false;
-                    grpbNumOutputs.AddLast(tempGroupbox);
 
 
                     // create textbox
@@ -407,17 +400,17 @@ namespace EnsorExternSimulation
                     tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
                     tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
                     tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    grpbNumOutputs.Last().Controls.Add(tempTextbox);
-                    grpbNumOutputs.Last().Controls.Add(tempTrackbar);
+                    tempGroupbox.Controls.Add(tempTextbox);
+                    tempGroupbox.Controls.Add(tempTrackbar);
+
+                    pnlNumOutputs.Controls.Add(tempGroupbox);
 
                     counter++;
                 }
-                foreach (GroupBox groupBox in grpbNumOutputs)
-                    pnlNumOutputs.Controls.Add(groupBox);
 
-                // clear all group boxes num outputs
-                foreach (GroupBox groupBox in grpbNumInputs)
-                    groupBox.Controls.Clear();
+
+                // clear all group boxes num inputs
+                pnlNumInputs.Controls.Clear();
                 counter = 0;
                 foreach (NumInput numInput in ensorIOController.numInputs)
                 {
@@ -429,7 +422,6 @@ namespace EnsorExternSimulation
                     tempGroupbox.Size = new System.Drawing.Size(258, 69);
                     tempGroupbox.TabIndex = 2;
                     tempGroupbox.TabStop = false;
-                    grpbNumInputs.AddLast(tempGroupbox);
 
                     // create textbox
                     TextBox tempTextbox = new TextBox();
@@ -451,14 +443,17 @@ namespace EnsorExternSimulation
                     tempTrackbar.SmallChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 100;
                     tempTrackbar.LargeChange = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
                     tempTrackbar.TickFrequency = (int)(tempTrackbar.Maximum - tempTrackbar.Minimum) / 10;
-                    grpbNumInputs.Last().Controls.Add(tempTextbox);
-                    grpbNumInputs.Last().Controls.Add(tempTrackbar);
+                    tempGroupbox.Controls.Add(tempTextbox);
+                    tempGroupbox.Controls.Add(tempTrackbar);
+
+                    pnlNumInputs.Controls.Add(tempGroupbox);
 
                     counter++;
-                }
-                foreach (GroupBox groupBox in grpbNumInputs)
-                    pnlNumInputs.Controls.Add(groupBox);
+                }                
             }
+            allowUpdateGUI = true;
+            updateGUI = new Thread(new ThreadStart(this.UpdateGui));
+            updateGUI.Start();
         }
 
         void tempTextboxOutput_TextChanged(object sender, EventArgs e)
@@ -466,7 +461,7 @@ namespace EnsorExternSimulation
             TextBox tempTexBox = (TextBox) sender;
             if (tempTexBox.Text.Equals("") || tempTexBox.Text.Equals("-"))
                 return;
-            foreach (GroupBox groupBox in grpbNumOutputs)
+            foreach (GroupBox groupBox in pnlNumInputs.Controls)
             {
                 if (groupBox.Name.Equals(tempTexBox.Name))
                 {
@@ -492,7 +487,7 @@ namespace EnsorExternSimulation
             TextBox tempTexBox = (TextBox)sender;
             if (tempTexBox.Text.Equals("") || tempTexBox.Text.Equals("-"))
                 return;
-            foreach (GroupBox groupBox in grpbNumInputs)
+            foreach (GroupBox groupBox in pnlNumInputs.Controls)
             {
                 if (groupBox.Name.Equals(tempTexBox.Name))
                 {
@@ -542,7 +537,7 @@ namespace EnsorExternSimulation
                 ensorIOController.SetDigOutputByGUI(((Label)sender).Text, false);
             else
                 ensorIOController.SetDigOutputByGUI(((Label)sender).Text, true);
-            ensorIOSockeAdaptor.SendIOUpdate();
+            ensorIOSocketAdaptor.SendIOUpdate();
         }
 
         void tempLabelInput_DoubleClick(object sender, EventArgs e)
@@ -551,7 +546,7 @@ namespace EnsorExternSimulation
                 ensorIOController.SetDigInputByGUI(((Label)sender).Text, false);
             else
                 ensorIOController.SetDigInputByGUI(((Label)sender).Text, true);
-            ensorIOSockeAdaptor.SendIOUpdate();
+            ensorIOSocketAdaptor.SendIOUpdate();
         }
 
         void tempTextboxInput_KeyPress(object sender, KeyPressEventArgs e)
@@ -561,7 +556,7 @@ namespace EnsorExternSimulation
             {
                 pnlDigInputs.Focus();
                 ensorIOController.SetNumInputByGUI(tempTextBox.Name, double.Parse(tempTextBox.Text));
-                ensorIOSockeAdaptor.SendIOUpdate();
+                ensorIOSocketAdaptor.SendIOUpdate();
                 e.Handled = true;
             }
 
@@ -590,7 +585,7 @@ namespace EnsorExternSimulation
             {
                 pnlDigOutputs.Focus();
                 ensorIOController.SetNumOutputByGUI(tempTextBox.Name, double.Parse(tempTextBox.Text));
-                ensorIOSockeAdaptor.SendIOUpdate();
+                ensorIOSocketAdaptor.SendIOUpdate();
                 e.Handled = true;
             }
 

@@ -1,8 +1,9 @@
-C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.EnsorExternIO.resources
-C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.Properties.Resources.resources
-C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.csproj.GenerateResource.Cache
 C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternIO.exe.config
 C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternIO.exe
 C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\bin\Debug\EnsorExternIO.pdb
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.csprojResolveAssemblyReference.cache
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternSimulation.EnsorExternIO.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.Properties.Resources.resources
+C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.csproj.GenerateResource.Cache
 C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.exe
 C:\Users\2425\Documents\GitHub\EnsorExternSimulation\EnsorExternSimulation\obj\Debug\EnsorExternIO.pdb
